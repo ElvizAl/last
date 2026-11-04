@@ -38,7 +38,7 @@ export const registerServerFn = createServerFn({ method: 'POST' })
       console.error(error)
       return {
         success: false,
-        message: 'Registrasi gagal, silakan coba lagi.',
+        message: 'Internal Server Error',
       }
     }
   })
@@ -75,7 +75,7 @@ export const loginServerFn = createServerFn({ method: 'POST' })
       console.error('Login error:', error)
       return {
         success: false,
-        message: 'Login sedang bermasalah, silakan coba lagi',
+        message: 'Internal Server Error',
       }
     }
   })

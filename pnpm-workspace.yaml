@@ -3,5 +3,8 @@ allowBuilds:
   esbuild: true
   lightningcss: true
   prisma: true
+minimumReleaseAgeExclude:
+  - '@better-auth/core@1.7.16'
+  - '@better-auth/prisma-adapter@1.7.16'
 packages:
   - .

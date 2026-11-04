@@ -1,11 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
-import { toast } from '#/components/ui/toast'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { useServerFn } from '@tanstack/react-start'
+import { registerServerFn } from '#/modules/auth/auth.api'
+import { registerSchema, type RegisterInput } from '#/modules/auth/auth.schema'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_auth/register')({
   component: RouteComponent,
@@ -13,6 +18,42 @@ export const Route = createFileRoute('/_auth/register')({
 
 function RouteComponent() {
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+  const registerServerFnHandler = useServerFn(registerServerFn)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  })
+
+  async function handlerRegisterUser(data: RegisterInput) {
+    try {
+      const result = await registerServerFnHandler({ data })
+
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      toast.success(result.message)
+    } catch {
+      toast.error('Register Gagal, silahkan coba lagi')
+    }
+
+    await navigate({ to: '/login'})
+
+  }
+
+
   return (
     <>
       <h1 className="font-heading text-[34px] font-semibold tracking-tight">
@@ -23,7 +64,11 @@ function RouteComponent() {
         Buat akun untuk memulai perjalanan bersama AnabulCare.
       </p>
 
-      <form className="space-y-5">
+      <form 
+      className="space-y-5"
+      onSubmit={handleSubmit(handlerRegisterUser)}
+        noValidate
+      >
         <div className="space-y-2">
           <Label htmlFor="name">Nama kamu</Label>
           <Input
@@ -32,7 +77,11 @@ function RouteComponent() {
             placeholder="Nama panggilanmu"
             required
             className="h-12 rounded-lg border-[#dce1d4] bg-white px-4 text-sm focus-visible:border-[#718567] focus-visible:ring-[#718567]/30 md:text-sm"
+            {...register('name')}
           />
+          <p id='name-error' aria-live='polite'>
+              {errors.name?.message}
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -45,7 +94,11 @@ function RouteComponent() {
             required
             maxLength={254}
             className="h-12 rounded-lg border-[#dce1d4] bg-white px-4 text-sm focus-visible:border-[#718567] focus-visible:ring-[#718567]/30 md:text-sm"
+            {...register('email')}
           />
+          <p id='email-error' aria-live='polite'>
+              {errors.email?.message}
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -60,7 +113,11 @@ function RouteComponent() {
               minLength={8}
               maxLength={128}
               className="h-12 rounded-lg border-[#dce1d4] bg-white px-4 text-sm focus-visible:border-[#718567] focus-visible:ring-[#718567]/30 md:text-sm"
+              {...register('password')}
             />
+            <p id='password-error' aria-live='polite'>
+              {errors.password?.message}
+            </p>
             <Button
               type="button"
               variant="ghost"
@@ -86,15 +143,29 @@ function RouteComponent() {
             minLength={8}
             maxLength={128}
             className="h-12 rounded-lg border-[#dce1d4] bg-white px-4 text-sm focus-visible:border-[#718567] focus-visible:ring-[#718567]/30 md:text-sm"
+            {...register('confirmPassword')}
           />
+          <p id='confirmPassword-error' aria-live='polite'>
+              {errors.confirmPassword?.message}
+          </p>
         </div>
 
         <Button
           type="submit"
           className="h-12 w-full cursor-pointer gap-2 rounded-lg bg-[#284f3d] text-sm text-white hover:bg-[#3c664e] disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={isSubmitting}
         >
-          Buat akun
-          <ArrowRight className="size-4" />
+          {isSubmitting ? (
+            <>
+              Mendaftarkan...
+              <Loader2 className="size-4 animate-spin" />
+            </>
+          ) : (
+            <>
+              Buat akun
+              <ArrowRight className="size-4" />
+            </>
+          )}
         </Button>
       </form>
 

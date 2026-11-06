@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Heart, PawPrint } from "lucide-react";
-import type { ReactNode } from "react";
+import { Link } from '@tanstack/react-router'
+import { ArrowLeft, Heart, PawPrint } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -68,5 +68,5 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         </p>
       </section>
     </main>
-  );
+  )
 }

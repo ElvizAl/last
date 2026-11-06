@@ -30,8 +30,9 @@ model User {
   banned        Boolean?
   banReason     String?
   banExpires    DateTime?
-  sessions Session[]
-  accounts Account[]
+  sessions      Session[]
+  accounts      Account[]
+  cats          Cat[]
 
   @@map("users")
 }
@@ -84,4 +85,28 @@ model Verification {
   expiresAt  DateTime
 
   @@map("verifications")
+}
+
+enum catGender {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum VaccineStatus {
+  TIDAK_VAKSIN
+  VAKSIN
+}
+
+model Cat {
+  id            String        @id @default(cuid())
+  name          String
+  gender        catGender     @default(LAKI_LAKI)
+  birthDate     DateTime?
+  breed         String?
+  vaccineStatus VaccineStatus @default(VAKSIN)
+  healthHistory String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

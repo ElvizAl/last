@@ -29,7 +29,7 @@ pnpm rag:search "kucing bersin dan mata berair"
 
 Ingest mengirim teks dataset ke provider embedding dan menyimpan vektor di Qdrant. Search mengambil lima kandidat tanpa ambang skor tetap. Skor bukan probabilitas diagnosis; periksa kecocokan isi dan halaman.
 
-`createRagAgent(userId, catId)` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
+`createRagAgent(userId, catId, prompt)` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
 
 ## Verifikasi
 
@@ -45,7 +45,7 @@ Empat model mengikuti scaffold paket `@anvia/memory-prisma` 1.4.0:
 Saat menjalankan agent, wajib teruskan scope dari server:
 
 ```ts
-const agent = createRagAgent(userId, catId)
+const agent = createRagAgent(userId, catId, prompt)
 const result = await agent.generate({
   prompt,
   session: { sessionId, userId: session.user.id },
@@ -127,3 +127,33 @@ sudah diterapkan. Penghapusan pengguna menghapus relasi percakapannya.
 Verifikasi relasi kucing: empat tes input, TypeScript, ESLint, dan build lolos. Uji HTTP dengan akun sementara membuktikan penolakan kucing bukan milik pengguna (404), pergantian kucing (409), penggunaan kembali memory lama tanpa kaitan kucing (409), dan percakapan yang profilnya sudah dihapus (409). Data uji dibersihkan. Kesesuaian jawaban model terhadap profil dan tampilan pilihan kucing di browser belum diuji langsung.
 
 Profil sekarang dibaca melalui tool `get_cat_profile` di `src/agents/tools/get-cat-profile.ts`. Factory agent menerima ID pengguna dari autentikasi dan ID kucing yang sudah diperiksa server. Model tidak menerima argumen untuk memilih pengguna atau kucing lain. Endpoint hanya memeriksa kepemilikan dan relasi percakapan; isi profil diambil tool saat dipanggil.
+
+## Tool konsultasi
+
+- `ask_followup`: satu atau dua pertanyaan ditampilkan sebagai kartu di chat.
+  Pengguna menjawab melalui pesan biasa berikutnya. Tool tidak memakai protokol
+  interaction/resume Anvia, tidak memblokir proses server menunggu manusia,
+  dan tidak mengarang jawaban. Prompt meminta agent berhenti setelah bertanya.
+- `assess_urgency`: checklist 20 contoh kondisi darurat dari
+  [Cornell Emergency and Critical Care](https://www.vet.cornell.edu/hospitals/services/emergency-and-critical-care-0),
+  diakses 8 November 2026. Input reported/denied memerlukan kutipan persis yang
+  ada dalam pesan terbaru dari server. Informasi tak disebut menjadi unknown.
+  Ada tanda terlapor: arahkan segera ke dokter hewan. Hasil kosong tidak
+  membuktikan aman. Makna tanda tetap hasil interpretasi model, bukan
+  pemeriksaan klinis. Tidak ada batas waktu atau skor diagnosis tambahan.
+- `grade_evidence`: periksa ID dokumen, sumber, halaman pada metadata, dan
+  kutipan dalam teks record hasil pencarian aktual di request yang sama.
+  Registry bukti dibuat per instance agent, bukan state global atau argumen
+  teks referensi dari model. Pada pesan baru, cari ulang referensi yang hendak
+  dikutip. Verifikasi halaman sebatas metadata; bukan pemeriksaan posisi teks
+  pada PDF asli, kebenaran medis, atau ketepatan diagnosis.
+
+Tool profil dan pencarian tetap tersedia. Nilai minScore pencarian yang sudah
+ada tidak diubah. Tidak ada perubahan schema database untuk tiga tool ini.
+
+```powershell
+node --experimental-strip-types --test src/agents/tools/consultation-tools.test.mjs
+```
+
+Pengujian ini memeriksa perilaku tool tanpa provider LLM atau Qdrant langsung.
+Kepatuhan agent terhadap urutan tool masih perlu diuji dengan model aktual.

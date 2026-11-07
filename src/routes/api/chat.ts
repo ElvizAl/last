@@ -97,7 +97,7 @@ export const Route = createFileRoute('/api/chat')({
             )
           }
 
-          const agent = createRagAgent(userId, cat.id)
+          const agent = createRagAgent(userId, cat.id, input.prompt)
           const events = agent.stream({
             prompt: input.prompt,
             session: {

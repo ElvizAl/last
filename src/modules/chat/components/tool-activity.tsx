@@ -2,6 +2,7 @@ import type { UIMessagePart } from '@anvia/client'
 import { Check, CircleAlert, LoaderCircle } from 'lucide-react'
 
 const toolLabels: Record<string, string> = {
+  get_cat_profile: 'Membaca profil kucing',
   cari_penyakit: 'Mencari referensi kesehatan',
 }
 

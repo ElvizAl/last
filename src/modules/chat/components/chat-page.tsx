@@ -229,6 +229,7 @@ export function ChatPage({
           </div>
           <Link
             to="/cats"
+            aria-label="Kucingku"
             className="flex shrink-0 items-center gap-2 rounded-xl border border-[#e4e8dd] px-3 py-2 text-xs text-[#61715b] hover:bg-[#f1f4ed]"
           >
             <Cat size={15} />
@@ -239,33 +240,31 @@ export function ChatPage({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8">
           {!active ? (
-            <div className="mx-auto flex min-h-full max-w-[680px] flex-col justify-center py-8 sm:py-12">
-              <div className="mb-6 flex items-center justify-center">
-                <div className="relative flex size-[76px] items-center justify-center rounded-[28px] bg-[#edf2e5] text-[#718666]">
-                  <Cat size={39} strokeWidth={1.35} aria-hidden="true" />
-                  <span className="absolute -right-2 -bottom-1 flex size-7 items-center justify-center rounded-full border-4 border-[#fffefa] bg-[#efdfcd] text-[#a27e55]">
-                    <Heart size={12} fill="currentColor" aria-hidden="true" />
+            <div className="mx-auto flex min-h-full max-w-[680px] flex-col justify-center py-4 sm:py-4">
+              <div className="mb-3 flex items-center justify-center gap-3">
+                <div className="relative flex size-11 items-center justify-center rounded-2xl bg-[#edf2e5] text-[#718666]">
+                  <Cat size={25} strokeWidth={1.35} aria-hidden="true" />
+                  <span className="absolute -right-2 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-[#fffefa] bg-[#efdfcd] text-[#a27e55]">
+                    <Heart size={9} fill="currentColor" aria-hidden="true" />
                   </span>
                 </div>
+                <p className="text-xs text-[#8a9283]">
+                  Hai, {name.split(' ')[0]} <span aria-hidden="true">🐾</span>
+                </p>
               </div>
-              <p className="text-center text-xs text-[#8a9283]">
-                Hai, {name.split(' ')[0]} <span aria-hidden="true">🐾</span>
-              </p>
-              <h2 className="mt-3 text-center font-heading text-[30px] font-medium leading-[1.2] tracking-[-1px] sm:text-[40px]">
+              <h2 className="text-center font-heading text-[28px] font-medium leading-[1.2] tracking-[-1px] sm:text-[36px]">
                 Cerita kecil,
                 <br />
                 <span className="font-serif italic text-[#7b8e6e]">
                   perhatian sepenuh hati.
                 </span>
               </h2>
-              <p className="mx-auto mt-4 max-w-sm text-center text-[13px] leading-6 text-[#899080]">
-                Ada yang berbeda dari si kecil hari ini?
-                <br />
-                Pilih kucingmu, lalu ceritakan pelan-pelan.
+              <p className="mx-auto mt-3 max-w-md text-center text-[13px] leading-6 text-[#899080]">
+                Pilih kucingmu dan ceritakan apa yang berubah hari ini.
               </p>
 
-              <div className="mt-8 rounded-[22px] border border-[#e7eadf] bg-[#f8f9f3] p-4 sm:p-5">
-                <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="mt-5 rounded-[20px] border border-[#e7eadf] bg-[#f8f9f3] p-3 sm:p-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
                   <p
                     id="cat-selection-label"
                     className="text-[11px] font-semibold tracking-[0.04em] text-[#7c8771]"
@@ -293,10 +292,10 @@ export function ChatPage({
                         disabled={locked}
                         aria-pressed={selectedCatId === cat.id}
                         onClick={() => setSelectedCatId(cat.id)}
-                        className={`flex min-w-0 max-w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-sm disabled:opacity-50 ${selectedCatId === cat.id ? 'border-[#98ad86] bg-[#e7eddf] text-[#365531]' : 'border-[#e3e7db] bg-[#fffefa] text-[#7a8471] hover:border-[#b6c3aa]'}`}
+                        className={`flex min-w-0 max-w-full items-center gap-2.5 rounded-2xl border px-3 py-2 text-xs disabled:opacity-50 ${selectedCatId === cat.id ? 'border-[#98ad86] bg-[#e7eddf] text-[#365531]' : 'border-[#e3e7db] bg-[#fffefa] text-[#7a8471] hover:border-[#b6c3aa]'}`}
                       >
                         <span
-                          className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${selectedCatId === cat.id ? 'bg-[#d7e2cb]' : 'bg-[#f0f1e9]'}`}
+                          className={`flex size-7 shrink-0 items-center justify-center rounded-xl ${selectedCatId === cat.id ? 'bg-[#d7e2cb]' : 'bg-[#f0f1e9]'}`}
                         >
                           <Cat size={18} strokeWidth={1.5} />
                         </span>
@@ -320,7 +319,7 @@ export function ChatPage({
                   </p>
                 )}
               </div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
                 {topics.map((topic) => (
                   <button
                     key={topic.title}
@@ -384,7 +383,7 @@ export function ChatPage({
                       </div>
                     ) : (
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#f0f3e9] text-[#7b8e6e]">
+                        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-xl bg-[#f0f3e9] text-[#7b8e6e]">
                           <PawPrint size={17} />
                         </span>
                         <div className="min-w-0 flex-1">

@@ -29,7 +29,7 @@ pnpm rag:search "kucing bersin dan mata berair"
 
 Ingest mengirim teks dataset ke provider embedding dan menyimpan vektor di Qdrant. Search mengambil lima kandidat tanpa ambang skor tetap. Skor bukan probabilitas diagnosis; periksa kecocokan isi dan halaman.
 
-`createRagAgent()` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
+`createRagAgent(userId, catId)` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
 
 ## Verifikasi
 
@@ -45,7 +45,7 @@ Empat model mengikuti scaffold paket `@anvia/memory-prisma` 1.4.0:
 Saat menjalankan agent, wajib teruskan scope dari server:
 
 ```ts
-const agent = createRagAgent()
+const agent = createRagAgent(userId, catId)
 const result = await agent.generate({
   prompt,
   session: { sessionId, userId: session.user.id },
@@ -125,3 +125,5 @@ dilanjutkan untuk kucing lain. Migrasi `20261108010000_chat_cat_profile`
 sudah diterapkan. Penghapusan pengguna menghapus relasi percakapannya.
 
 Verifikasi relasi kucing: empat tes input, TypeScript, ESLint, dan build lolos. Uji HTTP dengan akun sementara membuktikan penolakan kucing bukan milik pengguna (404), pergantian kucing (409), penggunaan kembali memory lama tanpa kaitan kucing (409), dan percakapan yang profilnya sudah dihapus (409). Data uji dibersihkan. Kesesuaian jawaban model terhadap profil dan tampilan pilihan kucing di browser belum diuji langsung.
+
+Profil sekarang dibaca melalui tool `get_cat_profile` di `src/agents/tools/get-cat-profile.ts`. Factory agent menerima ID pengguna dari autentikasi dan ID kucing yang sudah diperiksa server. Model tidak menerima argumen untuk memilih pengguna atau kucing lain. Endpoint hanya memeriksa kepemilikan dan relasi percakapan; isi profil diambil tool saat dipanggil.

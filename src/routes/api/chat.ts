@@ -61,10 +61,11 @@ export const Route = createFileRoute('/api/chat')({
             )
           }
 
-          // 3. Ambil profil dari database, bukan dari isi pesan client.
+          // 3. Periksa kepemilikan kucing sebelum menjalankan agent.
           const userId = session.user.id
           const cat = await prisma.cat.findFirst({
             where: { id: input.catId, userId },
+            select: { id: true },
           })
           if (!cat)
             return new Response('Kucing tidak ditemukan.', { status: 404 })
@@ -96,7 +97,7 @@ export const Route = createFileRoute('/api/chat')({
             )
           }
 
-          const agent = createRagAgent(cat)
+          const agent = createRagAgent(userId, cat.id)
           const events = agent.stream({
             prompt: input.prompt,
             session: {

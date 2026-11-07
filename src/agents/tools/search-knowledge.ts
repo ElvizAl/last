@@ -1,6 +1,6 @@
 import { createVectorSearchTool } from '@anvia/core/vector-store'
 import type { EvidenceRegistry } from './grade-evidence.ts'
-import { embeddingModel, store } from '../rag/store.ts'
+import { embeddingModel, store, sourceFilter } from '../rag/store.ts'
 
 export function createSearchPenyakitTool(evidence: EvidenceRegistry) {
   const search = createVectorSearchTool({
@@ -11,6 +11,7 @@ export function createSearchPenyakitTool(evidence: EvidenceRegistry) {
     model: embeddingModel,
     minScore: 0.78,
     topK: 5,
+    filter: sourceFilter,
   })
 
   return {

@@ -1,5 +1,5 @@
 import { retrieveDocuments } from '@anvia/core/vector-store'
-import { embeddingModel, store } from './store.ts'
+import { embeddingModel, store, sourceFilter } from './store.ts'
 
 try {
   const query = process.argv.slice(2).join(' ').trim()
@@ -11,6 +11,7 @@ try {
     query,
     minScore: 0.4,
     topK: 5,
+    filter: sourceFilter,
   })
   console.log(JSON.stringify(results, null, 2))
 } catch (error) {

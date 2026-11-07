@@ -4,9 +4,11 @@ Diadaptasi dari [ElvizAl/muehehe](https://github.com/ElvizAl/muehehe), commit `6
 
 ## Alur
 
-`documents/dataset.json` -> satu dokumen per penyakit -> embedding -> Qdrant -> `cari_penyakit` -> agent.
+`documents/penyakit-pages.json` -> satu dokumen per penyakit -> embedding -> Qdrant -> `cari_penyakit` -> agent.
 
-Dataset berisi 21 penyakit. Ingest memvalidasi struktur dan nomor unik, mempertahankan setiap penyakit utuh, dan menyimpan metadata sumber serta halaman. ID stabil memungkinkan pengulangan ingest mengganti dokumen yang sama. Penyakit yang dihapus dari dataset tidak otomatis dihapus dari collection. Metadata menunjuk JSON lokal; halaman mengikuti dataset dan belum diverifikasi terhadap PDF asli.
+Sumber yang dipakai adalah `documents/penyakit-pages.json`: 56 halaman berisi 50 entri penyakit. Parser menyatukan lanjutan antarhalaman dan memisahkan entri yang berbagi halaman. Heading Entri 42 yang terpotong pada halaman 44-45 disatukan untuk metadata nama. Teks sumber tetap dipertahankan. Metadata memuat `diseaseName`, `entry`, `page`, `pages`, dan `source`.
+
+ID stabil `penyakit-entry-01` sampai `penyakit-entry-50` memungkinkan ingest ulang mengganti entri sama. Penyakit yang dihapus dari sumber tidak otomatis dihapus dari collection. Halaman mengikuti JSON, belum diperiksa terhadap PDF asli. `dataset.json` tidak lagi dipakai ingestion. Data dan collection lama tetap ada; filter `source` mencegah hasil lama ikut retrieval.
 
 ## Konfigurasi
 
@@ -15,7 +17,7 @@ Isi environment server atau `.env` lokal. Jangan commit kredensial.
 - `SUMOPOD_API_KEY`, `SUMOPOD_BASE_URL`: provider embedding.
 - `QDRANT_URL`: server vector database.
 - `QDRANT_API_KEY`: jika server memerlukan autentikasi.
-- `QDRANT_COLLECTION`: opsional, default `anabulcare-dataset`.
+- `QDRANT_COLLECTION`: opsional, default `anabulcare-penyakit-pages`.
 - `OPENAI_API_KEY`, `OPENAI_BASE_URL`: provider model percakapan.
 
 Embedding: `text-embedding-3-small`, 1536 dimensi, cosine. Gunakan collection terpisah dari aplikasi lain dengan model embedding dan dimensi yang sama. Model percakapan mengikuti konfigurasi awal di `src/agents/model.ts`; ketersediaannya di provider belum diuji.
@@ -27,13 +29,13 @@ pnpm rag:ingest
 pnpm rag:search "kucing bersin dan mata berair"
 ```
 
-Ingest mengirim teks dataset ke provider embedding dan menyimpan vektor di Qdrant. Search mengambil lima kandidat tanpa ambang skor tetap. Skor bukan probabilitas diagnosis; periksa kecocokan isi dan halaman.
+Ingest mengirim teks dataset ke provider embedding dan menyimpan vektor di Qdrant. Search mengambil lima kandidat dengan minScore 0.4; tool agent masih memakai minScore 0.78 sesuai konfigurasi yang ada. Skor bukan probabilitas diagnosis; periksa kecocokan isi dan halaman.
 
-`createRagAgent(userId, catId, prompt)` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
+`createRagAgent(userId, catId, prompt)` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI chat, profil melalui tool, dan memory tersedia. Lens dan evaluasi alur agent belum diintegrasikan.
 
 ## Verifikasi
 
-TypeScript dan ESLint diperiksa. Ingest, retrieval, dan respons model langsung belum diuji karena konfigurasi environment belum tersedia. Dataset merupakan referensi mentah; validasi struktur tidak membuktikan kebenaran medis. Prompt membatasi jawaban pada bukti retrieval dan melarang instruksi obat/dosis; kepatuhan model tetap perlu dievaluasi.
+TypeScript dan ESLint lolos. Ingest sumber baru dan retrieval langsung sudah diuji; respons model belum diuji menyeluruh. Dataset merupakan referensi mentah; validasi struktur tidak membuktikan kebenaran medis. Prompt membatasi jawaban pada bukti retrieval dan melarang instruksi obat/dosis; kepatuhan model tetap perlu dievaluasi.
 
 ## Prisma memory
 
@@ -157,3 +159,31 @@ node --experimental-strip-types --test src/agents/tools/consultation-tools.test.
 
 Pengujian ini memeriksa perilaku tool tanpa provider LLM atau Qdrant langsung.
 Kepatuhan agent terhadap urutan tool masih perlu diuji dengan model aktual.
+
+## Verifikasi penggantian sumber (8 November 2026)
+
+Collection `anabulcare-penyakit-pages` terverifikasi memiliki 50 dokumen dari
+sumber baru. Tiga tes parser mencakup data nyata, lanjutan antarhalaman,
+beberapa entri di halaman sama, heading terpotong, dan input tidak valid.
+
+Uji query `kucing bersin dan mata berair` dengan minScore 0.4 menghasilkan
+lima kandidat; hasil pertama FHV-1, halaman 2-3, skor sekitar 0.515. Dengan
+minScore 0.78 yang masih dipakai agent, query yang sama menghasilkan nol
+kandidat. Penggantian sumber tidak mengubah kedua ambang tersebut. Nilai
+ambang dan relevansi kandidat perlu dievaluasi; skor bukan probabilitas
+penyakit. Metadata sumber semua hasil uji cocok dengan file baru.
+
+```powershell
+node --experimental-strip-types --test src/agents/rag/diseases.test.mjs
+```
+
+## Metadata tiap penyakit
+
+Metadata versi 2 memuat `documentId`, `source`, `sourceFile`, `title`,
+`diseaseName`, `entry`, `page`, `pages`, `pageStart`, `pageEnd`, `pageCount`,
+`referenceUrls`, dan `referenceCount`. `referenceUrls` berisi tautan yang
+benar-benar tertulis di entri, dipisahkan baris baru dan tanpa duplikat.
+Tautan diekstrak dari teks; isinya belum diverifikasi secara langsung.
+Jika tidak ada tautan, nilainya string kosong dan jumlahnya nol.
+Nilai metadata tetap scalar agar kompatibel dengan vector store Anvia.
+`page` dan `pages` tetap tersedia untuk tool verifikasi bukti.

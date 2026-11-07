@@ -141,7 +141,7 @@ function CatsPage() {
               ))}
             </nav>
           )}
-          <div className="grid items-start gap-6 md:grid-cols-[300px_1fr]">
+          <div className="mx-auto grid max-w-2xl items-start gap-4 md:grid-cols-[200px_minmax(0,1fr)]">
             <CatProfileCard cat={profil} />
             {profil ? (
               <CatProfileDetails

@@ -1,4 +1,4 @@
-import { ShieldCheck, Loader2, Trash2 } from 'lucide-react'
+import { PawPrint, Heart, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import type { CatProfile } from '../cat.types'
 
@@ -23,21 +23,25 @@ export function CatProfileDetails({
       }).format(profil.birthDate)
     : 'Belum diisi'
   return (
-    <section className="rounded-3xl border border-[#e1e5d9] bg-white p-6 sm:p-8">
-      <div className="mb-7 flex items-center gap-3">
-        <ShieldCheck className="text-[#718567]" />
-        <h2 className="text-xl font-semibold">Tentang {profil.name}</h2>
+    <section className="min-w-0 rounded-[24px] border border-[#e1e5d9] bg-[#fffefb] p-4 shadow-[0_6px_24px_#71856708] sm:p-5">
+      <div className="mb-4 flex items-center gap-2.5">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-[#edf0e5] text-[#718567]">
+          <PawPrint size={18} aria-hidden="true" />
+        </span>
+        <h2 className="min-w-0 break-words font-heading text-base font-semibold">
+          Tentang {profil.name}
+        </h2>
       </div>
-      <dl className="grid gap-6 sm:grid-cols-2">
+      <dl className="grid grid-cols-2 gap-2.5 [&>div]:min-w-0 [&>div]:rounded-2xl [&>div]:bg-[#f5f6ef] [&>div]:px-3 [&>div]:py-2.5">
         <div>
           <dt className="text-xs text-[#737a70]">Jenis kelamin</dt>
-          <dd className="mt-2 text-sm font-medium">
+          <dd className="mt-1 text-xs font-medium">
             {profil.gender === 'LAKI_LAKI' ? 'Jantan' : 'Betina'}
           </dd>
         </div>
         <div>
           <dt className="text-xs text-[#737a70]">Vaksinasi</dt>
-          <dd className="mt-2 text-sm font-medium">
+          <dd className="mt-1 text-xs font-medium">
             {profil.vaccineStatus === 'VAKSIN'
               ? 'Sudah vaksin'
               : 'Belum vaksin'}
@@ -45,23 +49,25 @@ export function CatProfileDetails({
         </div>
         <div>
           <dt className="text-xs text-[#737a70]">Tanggal lahir</dt>
-          <dd className="mt-2 text-sm font-medium">{birthday}</dd>
+          <dd className="mt-1 text-xs font-medium">{birthday}</dd>
         </div>
         <div>
           <dt className="text-xs text-[#737a70]">Ras kucing</dt>
-          <dd className="mt-2 break-words text-sm font-medium">
+          <dd className="mt-1 break-words text-xs font-medium">
             {profil.breed || 'Belum diisi'}
           </dd>
         </div>
       </dl>
-      <div className="mt-7 border-t border-[#edf0e7] pt-6">
-        <h3 className="text-xs text-[#737a70]">Catatan kesehatan</h3>
-        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7">
+      <div className="mt-3 rounded-2xl bg-[#fbf3e9] p-3">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-[#8b755c]">
+          <Heart size={12} aria-hidden="true" /> Catatan kesehatan
+        </h3>
+        <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-5 text-[#737a70]">
           {profil.healthHistory ||
             'Belum ada catatan. Kamu bisa menambahkannya lewat Edit profil.'}
         </p>
       </div>
-      <div className="mt-8 border-t border-[#edf0e7] pt-5">
+      <div className="mt-4 border-t border-[#edf0e7] pt-3">
         {confirmDelete ? (
           <div
             role="group"

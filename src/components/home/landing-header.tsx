@@ -1,3 +1,5 @@
+import { UserDropdown } from './user-dropdown'
+import { useSession } from '#/lib/auth/auth-client'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Menu, PawPrint } from 'lucide-react'
 import { useState } from 'react'
@@ -14,6 +16,8 @@ import {
 
 export function LandingHeader() {
   const [open, setOpen] = useState(false)
+  const { data: session, isPending, error } = useSession()
+  const showAuthLinks = !isPending && !error && !session
   return (
     <header className="mx-auto flex h-[78px] w-[calc(100%-40px)] max-w-[1180px] items-center justify-between gap-4 text-[#253e32] md:h-[100px] md:w-[calc(100%-48px)] lg:w-[calc(100%-80px)]">
       <Link
@@ -35,16 +39,19 @@ export function LandingHeader() {
         <a href="/#cara-kerja">Cara kerja</a>
         <a href="/#faq">FAQ</a>
         <Link to="/cats">Kucingku</Link>
-        <Link to="/login">Masuk</Link>
+        {showAuthLinks && <Link to="/login">Masuk</Link>}
       </nav>
       <div className="flex items-center gap-2">
-        <Button
-          nativeButton={false}
-          render={<Link to="/register" />}
-          className="hidden h-11 rounded-lg bg-[#284f3d] px-5 text-white hover:bg-[#3c664e] lg:inline-flex"
-        >
-          Daftar sekarang <ArrowRight size={16} />
-        </Button>
+        {session && <UserDropdown user={session.user} />}
+        {showAuthLinks && (
+          <Button
+            nativeButton={false}
+            render={<Link to="/register" />}
+            className="hidden h-11 rounded-lg bg-[#284f3d] px-5 text-white hover:bg-[#3c664e] lg:inline-flex"
+          >
+            Daftar sekarang <ArrowRight size={16} />
+          </Button>
+        )}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             render={
@@ -73,8 +80,12 @@ export function LandingHeader() {
                 { href: '/#cara-kerja', label: 'Cara kerja' },
                 { href: '/#faq', label: 'FAQ' },
                 { href: '/cats', label: 'Kucingku' },
-                { href: '/login', label: 'Masuk' },
-                { href: '/register', label: 'Daftar sekarang' },
+                ...(showAuthLinks
+                  ? [
+                      { href: '/login', label: 'Masuk' },
+                      { href: '/register', label: 'Daftar sekarang' },
+                    ]
+                  : []),
               ].map((link) => (
                 <SheetClose
                   key={link.href}

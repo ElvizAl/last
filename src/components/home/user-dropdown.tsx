@@ -1,6 +1,6 @@
 import { Menu } from '@base-ui/react/menu'
 import { Link } from '@tanstack/react-router'
-import { Cat, ChevronDown, Loader2, LogOut } from 'lucide-react'
+import { Cat, ChevronDown, Loader2, LogOut, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { signOut } from '#/lib/auth/auth-client'
@@ -61,6 +61,12 @@ export function UserDropdown({ user }: Props) {
               className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm outline-none data-highlighted:bg-[#edf0e7]"
             >
               <Cat size={17} /> Kucingku
+            </Menu.LinkItem>
+            <Menu.LinkItem
+              render={<Link to="/chat" />}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm outline-none data-highlighted:bg-[#edf0e7]"
+            >
+              <MessageCircle size={17} /> Konsultasi
             </Menu.LinkItem>
             <Menu.Item
               disabled={signingOut}

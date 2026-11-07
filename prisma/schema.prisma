@@ -22,17 +22,18 @@ model User {
   createdAt DateTime
   updatedAt DateTime
 
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  role          Role      @default(USER)
-  banned        Boolean?
-  banReason     String?
-  banExpires    DateTime?
-  sessions      Session[]
-  accounts      Account[]
-  cats          Cat[]
+  name              String
+  email             String             @unique
+  emailVerified     Boolean
+  image             String?
+  role              Role               @default(USER)
+  banned            Boolean?
+  banReason         String?
+  banExpires        DateTime?
+  sessions          Session[]
+  accounts          Account[]
+  cats              Cat[]
+  chatConversations ChatConversation[]
 
   @@map("users")
 }
@@ -98,15 +99,82 @@ enum VaccineStatus {
 }
 
 model Cat {
-  id            String        @id @default(cuid())
-  name          String
-  gender        catGender     @default(LAKI_LAKI)
-  birthDate     DateTime?
-  breed         String?
-  vaccineStatus VaccineStatus @default(VAKSIN)
-  healthHistory String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String             @id @default(cuid())
+  name              String
+  gender            catGender          @default(LAKI_LAKI)
+  birthDate         DateTime?
+  breed             String?
+  vaccineStatus     VaccineStatus      @default(VAKSIN)
+  healthHistory     String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatConversations ChatConversation[]
+}
+
+model AgentMemorySession {
+  id              String   @id @default(cuid())
+  scopeKey        String   @unique
+  sessionId       String
+  userId          String?
+  metadata        Json
+  compactionState Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  messages AgentMemoryMessage[]
+  errors   AgentMemoryError[]
+
+  @@index([sessionId, userId])
+}
+
+model AgentMemoryMessage {
+  id              String             @id @default(cuid())
+  memorySessionId String
+  memorySession   AgentMemorySession @relation(fields: [memorySessionId], references: [id], onDelete: Cascade)
+  runId           String
+  turn            Int
+  position        Int
+  role            String
+  message         Json
+  createdAt       DateTime           @default(now())
+
+  @@unique([memorySessionId, position])
+  @@index([runId])
+}
+
+model AgentMemoryError {
+  id              String             @id @default(cuid())
+  memorySessionId String
+  memorySession   AgentMemorySession @relation(fields: [memorySessionId], references: [id], onDelete: Cascade)
+  runId           String
+  error           Json
+  messages        Json
+  createdAt       DateTime           @default(now())
+
+  @@index([runId])
+}
+
+model AgentMemoryWrite {
+  id             String   @id @default(cuid())
+  scopeKey       String
+  idempotencyKey String
+  fingerprint    String
+  createdAt      DateTime @default(now())
+
+  @@unique([scopeKey, idempotencyKey])
+}
+
+model ChatConversation {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  catId     String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cat       Cat?     @relation(fields: [catId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, sessionId])
+  @@index([catId])
 }

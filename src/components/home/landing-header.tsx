@@ -39,6 +39,7 @@ export function LandingHeader() {
         <a href="/#cara-kerja">Cara kerja</a>
         <a href="/#faq">FAQ</a>
         <Link to="/cats">Kucingku</Link>
+        <Link to="/chat">Konsultasi</Link>
         {showAuthLinks && <Link to="/login">Masuk</Link>}
       </nav>
       <div className="flex items-center gap-2">
@@ -80,6 +81,7 @@ export function LandingHeader() {
                 { href: '/#cara-kerja', label: 'Cara kerja' },
                 { href: '/#faq', label: 'FAQ' },
                 { href: '/cats', label: 'Kucingku' },
+                { href: '/chat', label: 'Konsultasi' },
                 ...(showAuthLinks
                   ? [
                       { href: '/login', label: 'Masuk' },

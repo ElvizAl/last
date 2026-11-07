@@ -29,8 +29,99 @@ pnpm rag:search "kucing bersin dan mata berair"
 
 Ingest mengirim teks dataset ke provider embedding dan menyimpan vektor di Qdrant. Search mengambil lima kandidat tanpa ambang skor tetap. Skor bukan probabilitas diagnosis; periksa kecocokan isi dan halaman.
 
-`createRagAgent()` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Endpoint chat, UI konsultasi, konteks profil, memory, Lens, dan evaluasi belum diintegrasikan.
+`createRagAgent()` di `src/agents/agent.ts` menyediakan agent dengan tool pencarian. Buat instance baru per percakapan. Prisma memory sudah terpasang dengan `savePolicy: 'turn'`. Endpoint chat sudah tersedia. UI konsultasi, konteks profil, Lens, dan evaluasi belum diintegrasikan.
 
 ## Verifikasi
 
 TypeScript dan ESLint diperiksa. Ingest, retrieval, dan respons model langsung belum diuji karena konfigurasi environment belum tersedia. Dataset merupakan referensi mentah; validasi struktur tidak membuktikan kebenaran medis. Prompt membatasi jawaban pada bukti retrieval dan melarang instruksi obat/dosis; kepatuhan model tetap perlu dievaluasi.
+
+## Prisma memory
+
+`memoryStore` diekspor dari `src/agents/agent.ts` memakai Prisma client aplikasi.
+Empat model mengikuti scaffold paket `@anvia/memory-prisma` 1.4.0:
+`AgentMemorySession`, `AgentMemoryMessage`, `AgentMemoryError`, dan
+`AgentMemoryWrite`. Migrasi `20261108000000_add_agent_memory` sudah diterapkan.
+
+Saat menjalankan agent, wajib teruskan scope dari server:
+
+```ts
+const agent = createRagAgent()
+const result = await agent.generate({
+  prompt,
+  session: { sessionId, userId: session.user.id },
+})
+```
+
+`session.user.id` harus berasal dari autentikasi server, bukan body request.
+Pakai `sessionId` sama untuk melanjutkan percakapan, ID baru untuk percakapan
+baru. Scope mencakup pengguna; ID percakapan sama milik pengguna berbeda tidak
+berbagi pesan. Jika nanti menambahkan daftar/baca riwayat, autentikasi pengguna
+dan periksa kepemilikan di server. Riwayat konsultasi terstruktur berbeda dari
+memory percakapan dan belum dibuat.
+
+Uji langsung database berhasil: tulis pesan, tutup koneksi, baca memakai client
+baru, cegah penulisan duplikat, dan pastikan pengguna lain tidak menerima pesan.
+Data uji dibersihkan. Alur agent/model dan UI chat belum diuji menyeluruh.
+
+## Endpoint chat
+
+`POST /api/chat` memakai cookie login Better Auth. Request mengikuti protokol
+Anvia Client dengan body berikut:
+
+```json
+{
+  "type": "messages",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Kucingku bersin dan matanya berair",
+      "metadata": {
+        "sessionId": "00000000-0000-4000-8000-000000000000",
+        "catId": "id-kucing-yang-dipilih"
+      }
+    }
+  ]
+}
+```
+
+Buat UUID baru untuk percakapan baru; gunakan UUID sama untuk melanjutkan.
+Identitas pengguna berasal dari session server. Endpoint hanya memakai pesan
+pengguna terakhir; riwayat dibaca oleh agent dari Prisma memory, sehingga
+riwayat kiriman client tidak dipercaya sebagai konteks. Respons memakai
+stream JSONL Anvia, bukan satu objek JSON biasa. Batalkan fetch untuk
+meneruskan sinyal pembatalan ke agent.
+
+Status error: 401 belum login, 403 origin berbeda, 400 pesan/UUID tidak valid,
+413 body melebihi 64.000 byte, dan 500 gagal menyiapkan layanan. Pesan dibatasi
+4.000 karakter dan hanya teks; respons interaksi dan lampiran belum didukung.
+Error model selama streaming dikirim melalui protokol dengan pesan umum.
+
+Verifikasi endpoint: tes validasi input, TypeScript, ESLint, dan build lolos.
+HTTP langsung terhadap build mengembalikan 401 tanpa login. Streaming model
+dengan cookie login belum diuji langsung.
+
+```powershell
+node --experimental-strip-types --test src/modules/chat/chat-request.test.mjs
+```
+
+Alur HTTP ditulis langsung dalam handler POST di `src/routes/api/chat.ts`: cek login, validasi input, jalankan agent, lalu kirim stream. `chat-request.ts` hanya memvalidasi format pesan.
+
+## Percakapan per kucing
+
+Pilih kucing pada halaman `/chat` sebelum mengirim pesan pertama. Dropdown
+terkunci selama percakapan; untuk ganti kucing, pilih Chat baru. Profil yang
+belum ada dapat ditambahkan lewat tautan Kelola/Tambah kucing.
+
+Server memeriksa kepemilikan `catId`, mengambil profil terbaru dari database,
+dan menyimpannya sebagai relasi `ChatConversation` dengan unique
+`[userId, sessionId]`. Upsert tidak mengganti `catId` yang sudah terikat;
+permintaan untuk ganti kucing mendapat 409. Kucing milik orang lain mendapat 404. Profil kiriman client diabaikan. Agent menerima nama, tanggal lahir,
+jenis kelamin, ras, vaksin, dan riwayat kesehatan sebagai data, bukan instruksi.
+
+Memory tetap memakai scope pengguna dan percakapan. Riwayat lama tanpa relasi
+kucing hanya dapat dibaca, agar tidak tercampur saat memilih kucing baru.
+Jika profil dihapus, relasinya menjadi null, riwayat tetap ada dan tidak dapat
+dilanjutkan untuk kucing lain. Migrasi `20261108010000_chat_cat_profile`
+sudah diterapkan. Penghapusan pengguna menghapus relasi percakapannya.
+
+Verifikasi relasi kucing: empat tes input, TypeScript, ESLint, dan build lolos. Uji HTTP dengan akun sementara membuktikan penolakan kucing bukan milik pengguna (404), pergantian kucing (409), penggunaan kembali memory lama tanpa kaitan kucing (409), dan percakapan yang profilnya sudah dihapus (409). Data uji dibersihkan. Kesesuaian jawaban model terhadap profil dan tampilan pilihan kucing di browser belum diuji langsung.

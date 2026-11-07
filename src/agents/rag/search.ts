@@ -9,6 +9,7 @@ try {
     store,
     model: embeddingModel,
     query,
+    minScore: 0.4,
     topK: 5,
   })
   console.log(JSON.stringify(results, null, 2))

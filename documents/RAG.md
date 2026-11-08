@@ -132,6 +132,11 @@ Profil sekarang dibaca melalui tool `get_cat_profile` di `src/agents/tools/get-c
 
 ## Tool konsultasi
 
+Agent saat ini hanya mendaftarkan `get_cat_profile` dan `cari_penyakit`.
+Pertanyaan lanjutan 1–3 disampaikan langsung dalam teks chat berdasarkan hasil
+RAG. Tool di bawah adalah implementasi lama yang tidak dipasang pada agent;
+verifikasi kutipan dan checklist darurat tersebut tidak dijalankan otomatis.
+
 - `ask_followup`: satu atau dua pertanyaan ditampilkan sebagai kartu di chat.
   Pengguna menjawab melalui pesan biasa berikutnya. Tool tidak memakai protokol
   interaction/resume Anvia, tidak memblokir proses server menunggu manusia,
